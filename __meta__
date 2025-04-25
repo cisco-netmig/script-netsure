@@ -1,0 +1,10 @@
+{
+    "name": "Netsure",
+    "version": "1.0.0",
+    "author": "Sanjeev Krishna",
+    "uuid": "c893dda3-b403-451a-bf99-2b7db7838259",
+    "tags": [
+        "Post-Migration",
+        "Auditor"
+    ]
+}
