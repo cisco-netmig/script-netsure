@@ -22,3 +22,6 @@
 
 ## Tags
 `#Network Validation` `#Configuration Compliance` `#TextFSM` `#NTC-Templates` `#Network Automation`
+
+## Screenshots
+![Project Logo](./SCREENSHOT.png)

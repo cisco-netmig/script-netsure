@@ -1,4 +1,6 @@
 import logging
+logger = logging.getLogger(__name__)
+
 import os
 import json
 from PyQt5 import QtWidgets, QtGui, QtCore
@@ -281,7 +283,7 @@ class ChecksManagerDialog(QtWidgets.QDialog):
         """
         Slot that is triggered when templates are loaded.
         """
-        logging.info("Received loaded templates.")
+        logger.info("Received loaded templates.")
         self.form.templates_data = templates
 
     def _setup_ui(self):
@@ -742,7 +744,7 @@ class Form(QtWidgets.QWidget, Ui_Form):
         Ensures the checklist data path exists; if not, initializes it.
         """
         if not os.path.exists(self.path_checks_data):
-            logging.info("Checklist path not found, creating new checklist data file.")
+            logger.info("Checklist path not found, creating new checklist data file.")
             self.update_checks_data()
 
     def update_checks_data(self):
@@ -751,7 +753,7 @@ class Form(QtWidgets.QWidget, Ui_Form):
         """
         with open(self.path_checks_data, 'w') as f:
             json.dump(self.checks_data, f, indent=4)
-        logging.debug("Checklist data updated.")
+        logger.debug("Checklist data updated.")
 
     def load_checks_data(self):
         """
@@ -760,7 +762,7 @@ class Form(QtWidgets.QWidget, Ui_Form):
         with open(self.path_checks_data, 'r') as f:
             self.checks_data = json.load(f)
         self.populate_checks_tree()
-        logging.debug("Checklist data loaded and tree populated.")
+        logger.debug("Checklist data loaded and tree populated.")
 
     def run_start_event(self):
         """
@@ -770,7 +772,7 @@ class Form(QtWidgets.QWidget, Ui_Form):
         self.run_worker = RunEvent(self)
         self.run_worker.start()
         self.run_worker.finished.connect(self.run_finish_event)
-        logging.debug("Run worker started.")
+        logger.debug("Run worker started.")
 
     def run_finish_event(self):
         """
@@ -778,7 +780,7 @@ class Form(QtWidgets.QWidget, Ui_Form):
         """
         self.run_button.setEnabled(True)
         QtWidgets.QMessageBox.information(self, 'Info', 'Task completed!!')
-        logging.info("Run worker finished successfully.")
+        logger.info("Run worker finished successfully.")
 
     def open_path(self, path: str):
         """
@@ -789,9 +791,9 @@ class Form(QtWidgets.QWidget, Ui_Form):
         """
         try:
             if path and os.path.exists(path):
-                logging.info(f"Opening path: {path}")
+                logger.info(f"Opening path: {path}")
                 QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(path))
             else:
-                logging.error(f"Invalid or non-existent path: {path}")
+                logger.error(f"Invalid or non-existent path: {path}")
         except Exception as e:
-            logging.exception(f"Failed to open path: {e}")
+            logger.exception(f"Failed to open path: {e}")

@@ -1,5 +1,7 @@
-import os
 import logging
+logger = logging.getLogger(__name__)
+
+import os
 import re
 from concurrent.futures import ThreadPoolExecutor
 import importlib.resources as packages
@@ -25,11 +27,11 @@ class RunEvent(QtCore.QThread):
         os.makedirs(self.form.output_dir, exist_ok=True)
         self.devices = list(filter(None, self.form.devices_text_edit.toPlainText().splitlines()))
         self._get_checks_params()
-        logging.info('RunEvent: Starting device checks...')
+        logger.info('RunEvent: Starting device checks...')
         self.data = {}
         self._thread_executor()
         self._dump_results()
-        logging.info('RunEvent: Finished device checks and report generation.')
+        logger.info('RunEvent: Finished device checks and report generation.')
 
     def _get_checks_params(self):
         """
@@ -40,9 +42,9 @@ class RunEvent(QtCore.QThread):
         self.commands = {}
 
         if not self.form.templates_data:
-            logging.info("Loading NTC templates...")
+            logger.info("Loading NTC templates...")
             self.form.templates_data = load_templates()
-            logging.info("Templates loaded successfully.")
+            logger.info("Templates loaded successfully.")
 
         for i in range(self.form.checks_tree.topLevelItemCount()):
             parent = self.form.checks_tree.topLevelItem(i)
@@ -71,7 +73,7 @@ class RunEvent(QtCore.QThread):
         for device, future in futures.items():
             exception = future.exception()
             if exception:
-                logging.error(f'RunEvent: Exception for {device}: {exception}')
+                logger.error(f'RunEvent: Exception for {device}: {exception}')
 
     def _perform_check(self, raw, template_path, search_key, primary_key, regex):
         """
@@ -104,6 +106,10 @@ class RunEvent(QtCore.QThread):
                 if re.search(regex, line):
                     data['Data'].append(f'Line {line_idx + 1}: {line}')
                     data['Status'] = 'PASS'
+
+            if hasattr(logger, 'savings'):
+                logger.savings(20)
+
         return data
 
     def _collect_task(self, device):
@@ -113,7 +119,7 @@ class RunEvent(QtCore.QThread):
         """
         from netcore import GenericHandler
 
-        logging.info(f'RunEvent: Connecting to {device}...')
+        logger.info(f'RunEvent: Connecting to {device}...')
         proxy = {
             'hostname': self.form.session['JUMPHOST_IP'],
             'username': self.form.session['JUMPHOST_USERNAME'],
@@ -128,12 +134,12 @@ class RunEvent(QtCore.QThread):
                 proxy=proxy,
                 handler='NETMIKO'
             )
-            logging.info(f'RunEvent: Connection established to {device}')
+            logger.info(f'RunEvent: Connection established to {device}')
         except Exception as e:
-            logging.error(f'RunEvent: Connection failed to {device} - {e}')
+            logger.error(f'RunEvent: Connection failed to {device} - {e}')
             return
 
-        logging.info(f'RunEvent: Capturing commands from {device}')
+        logger.info(f'RunEvent: Capturing commands from {device}')
         commands_output = {
             command: handler.sendCommand(command).strip()
             for command in self.commands
@@ -173,7 +179,7 @@ class RunEvent(QtCore.QThread):
         filename = f"{os.path.basename(os.path.dirname(__file__)).title()}_{datetime.now().strftime('%Y-%m-%d_%H.%M')}.xlsx"
         self.form.output_report = os.path.join(self.form.output_dir, filename)
 
-        logging.info(f'RunEvent: Writing results to {self.form.output_report}')
+        logger.info(f'RunEvent: Writing results to {self.form.output_report}')
         workbook = XLBW(self.form.output_report)
         worksheet = workbook.add_worksheet('checks')
         worksheet.freeze_panes(1, 2)
@@ -189,9 +195,9 @@ class TemplateLoaderThread(QtCore.QThread):
     templates_loaded = QtCore.pyqtSignal(dict)
 
     def run(self):
-        logging.info("Loading NTC templates in background thread...")
+        logger.info("Loading NTC templates in background thread...")
         templates_data = load_templates()
-        logging.info("Templates loaded successfully.")
+        logger.info("Templates loaded successfully.")
         self.templates_loaded.emit(templates_data)
 
 
@@ -229,6 +235,6 @@ def load_templates():
                     'headers': [header.replace("_", " ").title() for header in headers]
                 }
             except Exception as e:
-                logging.error(f"Failed to load template {template_name}: {e}")
+                logger.error(f"Failed to load template {template_name}: {e}")
 
     return dict(sorted(templates.items()))
